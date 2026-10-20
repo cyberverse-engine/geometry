@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 
+#include <glm/common.hpp>
 #include <glm/geometric.hpp>
 
 namespace cyberverse {
@@ -27,6 +28,8 @@ constexpr float k_unit_epsilon = 1e-3f;
 bool is_finite(const glm::vec3& value) noexcept {
   return std::isfinite(value.x) && std::isfinite(value.y) && std::isfinite(value.z);
 }
+
+float plane_distance(const plane& pn, const glm::vec3& point) noexcept { return glm::dot(pn.normal, point) - pn.d; }
 
 bool ray_triangle_impl(const glm::vec3& origin,
                        const glm::vec3& direction,
@@ -230,6 +233,53 @@ bool ray_mesh(const ray& ry, const mesh_data& mesh, float& out_t, uint32_t& out_
   out_t = nearest;
   out_triangle_index = nearest_triangle;
   return true;
+}
+
+bool is_outside(const frustum& f, const aabb& box) {
+  if (!box.is_valid()) {
+    return true;
+  }
+
+  const glm::vec3 center = box.center();
+  const glm::vec3 half_extents = (box.max() - box.min()) * 0.5f;
+
+  for (const plane& pn : f.planes) {
+    const float distance = plane_distance(pn, center);
+    const float extent = glm::dot(glm::abs(pn.normal), half_extents);
+    if (distance + extent < 0.0f) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool is_outside(const frustum& f, const bounding_sphere& s) {
+  if (!s.is_valid() || !is_finite(s.center())) {
+    return true;
+  }
+
+  for (const plane& pn : f.planes) {
+    if (plane_distance(pn, s.center()) + s.radius() < 0.0f) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool is_outside(const frustum& f, const glm::vec3& p) {
+  if (!is_finite(p)) {
+    return true;
+  }
+
+  for (const plane& pn : f.planes) {
+    if (plane_distance(pn, p) < 0.0f) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace geometry

@@ -10,6 +10,8 @@
  */
 #pragma once
 
+#include <array>
+
 #include <glm/vec3.hpp>
 
 #include "cyberverse/geometry/bounds.hpp"
@@ -72,9 +74,25 @@ private:
   glm::vec3 direction_{ 0.0f };
 };
 
+/**
+ * @brief Plane definition
+ *
+ */
 struct plane {
-  glm::vec3 normal; // 单位长度
-  float d;          // plane: dot(normal, p) = d
+  glm::vec3 normal{ 0.0f }; // 单位长度；默认零向量表示退化平面
+  float d = 0.0f;           // plane: dot(normal, p) = d
+};
+
+/**
+ * @brief Frustum definition
+ *
+ *  NOTE: 平面法线朝内，内侧判断用 dot(normal, p) - d >= 0
+ *
+ *  A default-constructed frustum has degenerate (zero-normal) planes, so
+ *  is_outside() culls nothing for finite points and finite, valid bounds.
+ */
+struct frustum {
+  std::array<plane, 6> planes{}; // Order: Left, Right, Bottom, Top, Near, Far
 };
 
 /**
@@ -130,6 +148,48 @@ bool ray_triangle(const ray& ry, const glm::vec3& v0, const glm::vec3& v1, const
  */
 bool ray_mesh(const ray& ry, const mesh_data& mesh, float& out_t, uint32_t& out_triangle_index);
 
-} // namespace geometry
+/**
+ * @brief Conservative frustum-AABB culling test
+ *
+ * Returns true when the box is entirely outside at least one inward-facing
+ * plane, so it cannot intersect the frustum. A false result means the box may
+ * be inside or intersecting; it can also be outside near an edge or corner
+ * without being fully beyond a single face plane.
+ *
+ * An invalid AABB is treated as outside.
+ *
+ * @param f
+ * @param box
+ * @return true when the box is culled
+ */
+bool is_outside(const frustum& f, const aabb& box);
 
+/**
+ * @brief Conservative frustum-bounding-sphere culling test
+ *
+ * Returns true when the sphere is entirely outside at least one inward-facing
+ * plane. As with the AABB overload, a false result is conservative: the sphere
+ * may still be outside the frustum near an edge or corner.
+ *
+ * An invalid sphere (negative radius or non-finite center) is treated as
+ * outside. Plane normals must be unit length for the radius test.
+ *
+ * @param f
+ * @param s
+ * @return true when the sphere is culled
+ */
+bool is_outside(const frustum& f, const bounding_sphere& s);
+
+/**
+ * @brief Frustum-point test
+ *
+ * A point is inside when dot(normal, p) - d >= 0 for every plane.
+ *
+ * @param f
+ * @param p
+ * @return true when the point is outside the frustum, or non-finite
+ */
+bool is_outside(const frustum& f, const glm::vec3& p);
+
+} // namespace geometry
 } // namespace cyberverse

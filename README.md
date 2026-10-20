@@ -10,6 +10,7 @@ generation (C++23, GLM).
 - Ray intersections against planes, AABBs, bounding spheres, triangles, and triangle meshes.
   `ray` stores a unit-length direction, so `t` is the hit distance; construction normalizes
   any non-zero direction.
+- Frustum culling for points, AABBs, and bounding spheres, using inward-facing planes.
 - Primitives: unit quad, unit cube, box, slab, cylinder, cone.
 - Spheres: UV sphere, icosphere, and quad sphere through `create_sphere(radius, sphere_options)`.
 - Catch2 tests and Google Benchmark benchmarks.

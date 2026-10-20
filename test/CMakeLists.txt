@@ -15,6 +15,7 @@ add_executable(
   mesh_data_test.cpp
   bounds_test.cpp
   intersect_test.cpp
+  frustum_test.cpp
   primitives_test.cpp
   sphere_test.cpp
 )

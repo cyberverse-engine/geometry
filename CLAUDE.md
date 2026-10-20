@@ -32,6 +32,7 @@ ctest --test-dir /tmp/cyberverse-geometry-test
 - Triangles are counter-clockwise when viewed from outside and vertex normals agree with that winding. Keep both invariants when adding primitives.
 - `mesh_data` stores vertices and indices separately; every three indices form one triangle and `triangle_count()` is `index_count() / 3`. `append()` offsets the appended indices. `empty()` is based on vertices, so a vertex-only mesh has no drawable triangles.
 - Rays use `p = origin + t * direction`, where `direction` is unit length and `t` is distance. The `ray` constructor normalizes non-zero directions; zero or non-finite directions produce an invalid ray and every intersection returns false. Use `ray::from_normalized` when the direction is already unit length. `ray_mesh` returns the nearest distance and its triangle index.
+- `frustum` stores six inward-facing planes (`dot(normal, p) - d >= 0` is inside); plane normals must be unit length. `is_outside` is exact for points and a conservative plane test for AABBs/bounding spheres. Invalid AABBs and spheres, plus non-finite points, are treated as outside.
 - `aabb` is invalid by default and grows through `expand()`; `compute_aabb` of an empty mesh stays invalid. `compute_bounding_sphere` uses the AABB center and the farthest vertex, and returns a zero-radius sphere for an empty mesh.
 
 ## Style

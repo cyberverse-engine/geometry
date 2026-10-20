@@ -7,6 +7,7 @@
 - `vertex` / `mesh_data`：位置、法线、UV，三角形索引，`append`、`reserve`、`clear`。
 - `bounds`：`aabb`、`bounding_sphere`、`compute_aabb`、`compute_bounding_sphere`。
 - `intersect`：ray-plane、ray-aabb、ray-bounding-sphere、ray-triangle、ray_mesh。`ray` 构造时归一化方向（已单位化时可用 `from_normalized` 跳过），`t` 为命中距离；无效 ray 返回 miss。
+- `frustum` / `is_outside`：对点、AABB、bounding sphere 的视锥剔除；平面法线朝内。
 - `primitives`：`unit_quad`、`unit_cube`、box、slab、cylinder、cone。
 - 球体生成：UV 球（经纬网格）、icosphere（二十面体细分）、quad sphere（球化立方体）。
 - 测试与基准：Catch2 测试 target、Google Benchmark 基准 target。
@@ -28,11 +29,11 @@
 
 | 能力 | 现状 / 缺口 |
 |---|---|
-| 图元 | 缺 capsule（角色/物理）、torus、disk/circle、grid/细分平面、frustum、hemisphere。`create_cone` 没有 normal/caps 选项，图元选项风格不统一。 |
+| 图元 | 缺 capsule（角色/物理）、torus、disk/circle、grid/细分平面、frustum primitive（截头锥网格）、hemisphere。`create_cone` 没有 normal/caps 选项，图元选项风格不统一。 |
 | 解析求交 | 缺 ray-sphere、ray-cylinder、ray-cone、ray-capsule；目前只有 bounding sphere 的近似求交。 |
 | 加速结构 | `ray_mesh` 是 O(n) 线性扫描；需要 BVH 或 AABB tree，否则大网格拾取不可用。 |
 | 其他查询 | 缺 triangle-triangle、point-in-mesh、closest point on triangle/mesh。 |
-| 包围体 | 缺 OBB、frustum/plane classification、AABB/sphere 重叠测试；`compute_bounding_sphere` 用 AABB 中心，偏松。 |
+| 包围体 | 已有 `frustum` 的逐平面剔除；仍缺 OBB、AABB/sphere/triangle 之间的重叠测试、closest point，以及 `compute_bounding_sphere` 的最小包围球改进。 |
 | 网格属性 | 缺 tangent、顶点颜色、第二套 UV、submesh/material range。 |
 
 ### P2：建模、拓扑与工程化
@@ -76,6 +77,7 @@
 - `mesh_data` 没有校验，坏索引可能被静默忽略。
 - 图元选项不一致：cylinder 有 `caps`/`normal`，cone 固定 caps 且没有 normal 选项。
 - `ray_mesh` 没有加速结构。
+- `is_outside` 的 AABB/sphere 重载是逐平面保守测试：对象完全位于视锥外但靠近边/角、未完全越过任一平面时可能返回 false；点测试是精确的。
 - UV 球极点附近的等距圆柱 UV 仍然有拉伸；这是映射本身的限制。
 
 ## 非目标 / 待确认
