@@ -235,6 +235,37 @@ bool ray_mesh(const ray& ry, const mesh_data& mesh, float& out_t, uint32_t& out_
   return true;
 }
 
+bool aabb_overlaps(const aabb& lhs, const aabb& rhs) {
+  if (!lhs.is_valid() || !rhs.is_valid() || !is_finite(lhs.min()) || !is_finite(lhs.max()) || !is_finite(rhs.min()) ||
+      !is_finite(rhs.max())) {
+    return false;
+  }
+
+  return lhs.min().x <= rhs.max().x && lhs.max().x >= rhs.min().x && lhs.min().y <= rhs.max().y &&
+         lhs.max().y >= rhs.min().y && lhs.min().z <= rhs.max().z && lhs.max().z >= rhs.min().z;
+}
+
+bool sphere_overlaps_aabb(const bounding_sphere& sphere, const aabb& box) {
+  if (!sphere.is_valid() || !std::isfinite(sphere.radius()) || !is_finite(sphere.center()) || !box.is_valid() ||
+      !is_finite(box.min()) || !is_finite(box.max())) {
+    return false;
+  }
+
+  const glm::vec3 closest = glm::clamp(sphere.center(), box.min(), box.max());
+  const glm::vec3 delta = sphere.center() - closest;
+  return glm::dot(delta, delta) <= sphere.radius() * sphere.radius();
+}
+
+float point_aabb_distance_sq(const glm::vec3& point, const aabb& box) {
+  if (!box.is_valid() || !is_finite(box.min()) || !is_finite(box.max()) || !is_finite(point)) {
+    return std::numeric_limits<float>::infinity();
+  }
+
+  const glm::vec3 closest = glm::clamp(point, box.min(), box.max());
+  const glm::vec3 delta = point - closest;
+  return glm::dot(delta, delta);
+}
+
 bool is_outside(const frustum& f, const aabb& box) {
   if (!box.is_valid()) {
     return true;

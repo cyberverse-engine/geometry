@@ -149,6 +149,43 @@ bool ray_triangle(const ray& ry, const glm::vec3& v0, const glm::vec3& v1, const
 bool ray_mesh(const ray& ry, const mesh_data& mesh, float& out_t, uint32_t& out_triangle_index);
 
 /**
+ * @brief AABB-AABB overlap test
+ *
+ * Uses closed intervals: boxes that only touch are considered overlapping. An invalid or non-finite box is
+ * treated as non-overlapping.
+ *
+ * @param lhs
+ * @param rhs
+ * @return true when the boxes overlap
+ */
+bool aabb_overlaps(const aabb& lhs, const aabb& rhs);
+
+/**
+ * @brief Bounding-sphere / AABB overlap test
+ *
+ * Uses the squared distance from the sphere center to the closest point on the box. A sphere with a negative or
+ * non-finite radius, a non-finite center, or an invalid/non-finite box is treated as non-overlapping. Touching is
+ * considered overlapping.
+ *
+ * @param sphere
+ * @param box
+ * @return true when the sphere overlaps the box
+ */
+bool sphere_overlaps_aabb(const bounding_sphere& sphere, const aabb& box);
+
+/**
+ * @brief Squared distance from a point to an AABB
+ *
+ * Returns 0 when the point is inside the box. An invalid/non-finite box or a non-finite point returns positive
+ * infinity.
+ *
+ * @param point
+ * @param box
+ * @return float squared distance
+ */
+float point_aabb_distance_sq(const glm::vec3& point, const aabb& box);
+
+/**
  * @brief Conservative frustum-AABB culling test
  *
  * Returns true when the box is entirely outside at least one inward-facing

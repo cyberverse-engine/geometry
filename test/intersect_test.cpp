@@ -173,3 +173,38 @@ TEST_CASE("ray_mesh", "[intersect][ray]") {
   REQUIRE(approx(t, 1.0f));
   REQUIRE(triangle == 1);
 }
+
+TEST_CASE("aabb_overlaps", "[intersect][bounds]") {
+  const aabb box({ -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f });
+
+  REQUIRE(aabb_overlaps(box, box));
+  REQUIRE(aabb_overlaps(box, aabb({ 1.0f, 1.0f, 1.0f }, { 2.0f, 2.0f, 2.0f })));
+  REQUIRE(aabb_overlaps(box, aabb({ 0.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f })));
+  REQUIRE_FALSE(aabb_overlaps(box, aabb({ 1.01f, 0.0f, 0.0f }, { 2.0f, 1.0f, 1.0f })));
+  REQUIRE_FALSE(aabb_overlaps(aabb{}, box));
+  REQUIRE_FALSE(aabb_overlaps(box, aabb{}));
+  REQUIRE_FALSE(aabb_overlaps(aabb({ std::nanf(""), 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }), box));
+}
+
+TEST_CASE("sphere_overlaps_aabb", "[intersect][bounds]") {
+  const aabb box({ -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f });
+
+  REQUIRE(sphere_overlaps_aabb(bounding_sphere({ 0.0f, 0.0f, 0.0f }, 0.5f), box));
+  REQUIRE(sphere_overlaps_aabb(bounding_sphere({ 2.0f, 0.0f, 0.0f }, 1.0f), box));
+  REQUIRE_FALSE(sphere_overlaps_aabb(bounding_sphere({ 2.0f, 0.0f, 0.0f }, 0.99f), box));
+  REQUIRE(sphere_overlaps_aabb(bounding_sphere({ 2.0f, 2.0f, 2.0f }, std::sqrt(3.0f)), box));
+  REQUIRE_FALSE(sphere_overlaps_aabb(bounding_sphere({ 0.0f, 0.0f, 0.0f }, -1.0f), box));
+  REQUIRE_FALSE(sphere_overlaps_aabb(bounding_sphere({ std::nanf(""), 0.0f, 0.0f }, 1.0f), box));
+  REQUIRE_FALSE(sphere_overlaps_aabb(bounding_sphere({ 0.0f, 0.0f, 0.0f }, 1.0f), aabb{}));
+}
+
+TEST_CASE("point_aabb_distance_sq", "[intersect][bounds]") {
+  const aabb box({ -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f });
+
+  REQUIRE(approx(point_aabb_distance_sq({ 0.0f, 0.0f, 0.0f }, box), 0.0f));
+  REQUIRE(approx(point_aabb_distance_sq({ 1.0f, 1.0f, 1.0f }, box), 0.0f));
+  REQUIRE(approx(point_aabb_distance_sq({ 2.0f, 0.0f, 0.0f }, box), 1.0f));
+  REQUIRE(approx(point_aabb_distance_sq({ 2.0f, 3.0f, 0.0f }, box), 5.0f));
+  REQUIRE(std::isinf(point_aabb_distance_sq({ 0.0f, 0.0f, 0.0f }, aabb{})));
+  REQUIRE(std::isinf(point_aabb_distance_sq({ std::nanf(""), 0.0f, 0.0f }, box)));
+}
